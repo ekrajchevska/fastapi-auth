@@ -1,6 +1,7 @@
-version: '3.5'
+
+ version: '3.5'
 services:
-    postgres:
+    postgres-auth:
         restart: always
         image: postgres:10
         env_file:
@@ -9,10 +10,10 @@ services:
             - auth-data:/var/lib/postgresql/data
         ports:
             - "5432:5432"
-        networks:
-            - auth_network
+#        networks:
+#            - auth_network
 
-    app:
+    auth-app:
         restart: always
         # network_mode: host
         build: .
@@ -23,13 +24,39 @@ services:
         depends_on: 
             - postgres
 
-        networks:
-            - auth_network
+    postgres-products:
+        restart: always
+        image: postgres:10
+        env_file:
+            - ./../flask-products/db-config.env
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        ports:
+            - "5433:5432"
 
-networks:
-  auth_network:
-    name: project_network
+    products-app:
+        restart: always
+        build: ./../flask-products
+        tty: true   # output za testovite, probaj bez 
+        ports:    
+            - 5000:5000
+        volumes:
+            - .:/project
+        depends_on: 
+            - postgres
+        # entrypoint: ["python", "app.py"]
+#        networks: 
+#            - products_network
+
+#        networks:
+#            - auth_network
+
+#networks:
+#  auth_network:
+#    name: project_network
 
 volumes:
   auth-data:
+    driver: local
+  db-data:
     driver: local
