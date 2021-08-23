@@ -1,0 +1,35 @@
+version: '3.5'
+services:
+    postgres:
+        restart: always
+        image: postgres:10
+        env_file:
+            - db-vars.env
+        volumes:
+            - auth-data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            - auth_network
+
+    app:
+        restart: always
+        # network_mode: host
+        build: .
+        ports:    
+            - 8000:8000
+        volumes:
+            - .:/fastapi-auth
+        depends_on: 
+            - postgres
+
+        networks:
+            - auth_network
+
+networks:
+  auth_network:
+    name: project_network
+
+volumes:
+  auth-data:
+    driver: local
