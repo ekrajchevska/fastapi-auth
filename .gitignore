@@ -3,3 +3,4 @@ __pycache__
 auth_app.db
 app/auth/auth_env.py
 app/registration/reg_env.py
+db-vars.env
