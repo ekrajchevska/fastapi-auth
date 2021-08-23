@@ -1,5 +1,4 @@
-
- version: '3.5'
+version: '3.5'
 services:
     postgres-auth:
         restart: always
@@ -19,10 +18,8 @@ services:
         build: .
         ports:    
             - 8000:8000
-        volumes:
-            - .:/fastapi-auth
         depends_on: 
-            - postgres
+            - postgres-auth
 
     postgres-products:
         restart: always
@@ -40,10 +37,8 @@ services:
         tty: true   # output za testovite, probaj bez 
         ports:    
             - 5000:5000
-        volumes:
-            - .:/project
         depends_on: 
-            - postgres
+            - postgres-products
         # entrypoint: ["python", "app.py"]
 #        networks: 
 #            - products_network
