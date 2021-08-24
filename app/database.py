@@ -3,8 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # SQLALCHEMY_DATABASE_URL = "sqlite:///./auth_app.db"
-# SQLALCHEMY_DATABASE_URL = "postgresql://postgres:admin@localhost:5432/auth-users"
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:admin@postgres-auth:5432/auth-users"
+# SQLALCHEMY_DATABASE_URL = "postgresql://postgres:admin@localhost:5432/auth_users"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:admin@postgres:5432/auth_users"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 

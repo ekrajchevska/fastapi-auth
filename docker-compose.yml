@@ -6,8 +6,8 @@ services:
         env_file:
             - db-vars.env
         volumes:
-          #  - auth-data:/var/lib/postgresql/data
           - ./postgres-db-init.sh:/docker-entrypoint-initdb.d/postgres-db-init.sh
+          - db-data:/var/lib/postgresql/data
         ports:
             - "5432:5432"
 #        networks:
@@ -35,8 +35,6 @@ services:
 #  auth_network:
 #    name: project_network
 
-#volumes:
-# auth-data:
-#    driver: local
-#  db-data:
-#    driver: local
+volumes:
+  db-data:
+    driver: local
