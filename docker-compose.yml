@@ -1,12 +1,13 @@
 version: '3.5'
 services:
-    postgres-auth:
+    postgres:
         restart: always
         image: postgres:10
         env_file:
             - db-vars.env
         volumes:
-            - auth-data:/var/lib/postgresql/data
+          #  - auth-data:/var/lib/postgresql/data
+          - ./postgres-db-init.sh:/docker-entrypoint-initdb.d/postgres-db-init.sh
         ports:
             - "5432:5432"
 #        networks:
@@ -19,17 +20,7 @@ services:
         ports:    
             - 8000:8000
         depends_on: 
-            - postgres-auth
-
-    postgres-products:
-        restart: always
-        image: postgres:10
-        env_file:
-            - ./../flask-products/db-config.env
-        volumes:
-            - db-data:/var/lib/postgresql/data
-        ports:
-            - "5433:5432"
+            - postgres
 
     products-app:
         restart: always
@@ -38,20 +29,14 @@ services:
         ports:    
             - 5000:5000
         depends_on: 
-            - postgres-products
-        # entrypoint: ["python", "app.py"]
-#        networks: 
-#            - products_network
-
-#        networks:
-#            - auth_network
+            - postgres
 
 #networks:
 #  auth_network:
 #    name: project_network
 
-volumes:
-  auth-data:
-    driver: local
-  db-data:
-    driver: local
+#volumes:
+# auth-data:
+#    driver: local
+#  db-data:
+#    driver: local
