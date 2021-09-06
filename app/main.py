@@ -5,7 +5,6 @@ from .routers import user
 import logging
 
 
-
 app = FastAPI()
 
 logger = logging.getLogger(__name__)

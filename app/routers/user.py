@@ -1,4 +1,5 @@
 from starlette.requests import Request
+from starlette.status import HTTP_400_BAD_REQUEST
 from app.registration import reg_env
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -11,9 +12,10 @@ from .. import schemas, database, models
 from passlib.context import CryptContext
 from datetime import timedelta
 import asyncio
+import random
 
 
-router = APIRouter(tags=['Users'])
+router = APIRouter(prefix="/auth-api", tags=['Users'])
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 client = Client(reg_env.TWILIO_ACCOUNT_SID, reg_env.TWILIO_AUTH_TOKEN)
 
@@ -28,6 +30,7 @@ async def handle_register(user_request: schemas.UserCreate):
     response.set_cookie('password', pwd_context.hash(user_request.password))
     response.set_cookie('name', user_request.name)
     response.set_cookie('surname', user_request.surname)
+    response.set_cookie('phone_number', user_request.phone_number)
     return response
 
 
@@ -41,6 +44,7 @@ def send_verification_code(email):
 def verify():
     pass
 
+
 @router.post('/verify')
 async def verify_code(request : Request, verification_obj : schemas.VerificationCode):
     cookies = request.cookies
@@ -52,6 +56,7 @@ async def verify_code(request : Request, verification_obj : schemas.Verification
         response.set_cookie('password', cookies['password'])
         response.set_cookie('name', cookies['name'])
         response.set_cookie('surname', cookies['surname'])
+        response.set_cookie('phone_number', cookies['phone_number'])
         
     else:
         response = RedirectResponse('/failure', status_code=status.HTTP_303_SEE_OTHER)
@@ -70,7 +75,7 @@ def create_user(request : Request, db: Session = Depends(database.get_db)):
     cookies = request.cookies
     db_user = user_service.get_user_by_email(db, cookies['email'])
     if db_user:
-        raise HTTPException(status_code=400, detail="User already registered, please login!")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already registered, please login!")
     return user_service.create_user(db=db, user=schemas.UserCreate.parse_obj(cookies))
 
 @router.get("/failure", status_code=status.HTTP_400_BAD_REQUEST)
@@ -97,12 +102,38 @@ def login(user_login: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
     if not pwd_context.verify(user_login.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST , detail="Invalid password!")
 
-    access_token_expires = timedelta(minutes=token.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = token.create_access_token(
-        data={"email": user.email}, expires_delta=access_token_expires    # data shto se enkodira vo jwt tokenot, moze da se smeni primer moze id 
-    )                                                                   # bitno: da ne e huge tokenot, ama moze pojke raboti da se stavaat 
-    return {"access_token": access_token, "token_type": "bearer"}
+    code = round(random.random() * 10000)
+    message = client.messages.create(  
+        messaging_service_sid = reg_env.TWILIO_MESSAGING_LOGIN_SERVICE_SID, 
+        body = f"Your login code is {code}",  
+        to = user.phone_number 
+    ) 
 
+    response = RedirectResponse('/logincode', status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie('code', code)
+    response.set_cookie('email', user.email)
+
+    return response
+
+
+
+@router.get("/logincode")
+def redirect_login():
+    pass
+
+
+@router.post("/logincode")
+def login_code(request : Request, verification_obj : schemas.VerificationCode):
+    cookies = request.cookies
+    if verification_obj.code == cookies['code']:
+        access_token_expires = timedelta(minutes=token.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = token.create_access_token(
+        data={"email": cookies['email']}, expires_delta=access_token_expires    # data shto se enkodira vo jwt tokenot, moze da se smeni primer moze id 
+        )                                                                   # bitno: da ne e huge tokenot, ama moze pojke raboti da se stavaat 
+    
+        return {"access_token": access_token, "token_type": "bearer"}
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code!")
 
 
 @router.get("/myprofile", response_model=schemas.User)

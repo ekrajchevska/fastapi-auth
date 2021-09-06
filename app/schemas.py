@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     surname : str
     email : str
     password : str
+    phone_number : str
 
 class UserLogin(BaseModel):
     email : str
@@ -18,6 +19,7 @@ class User(BaseModel):
     surname : str
     email : str
     hashed_password : str
+    phone_number : str
 
     class Config:
         orm_mode = True

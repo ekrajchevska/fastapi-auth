@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apis
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - http:
+        paths:
+        - path: /auth-api
+          pathType: Prefix
+          backend:
+            service: 
+              name: fastapi-auth-lb
+              port: 
+                number: 8000
+        - path: /products-api
+          pathType: Prefix
+          backend:
+            service:
+              name: flask-products-lb
+              port:
+                number: 5000

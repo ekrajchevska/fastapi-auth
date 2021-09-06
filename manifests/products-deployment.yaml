@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-products-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-products
+  template:
+    metadata:
+      labels:
+        app: flask-products
+    spec:
+      hostNetwork: true
+      containers:
+        - name: products-image
+          image: evgenija1/products-image:v4
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 100Mi
+              cpu: 100m

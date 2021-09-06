@@ -10,3 +10,4 @@ class User(Base):
     surname = Column(String)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    phone_number = Column(String)
