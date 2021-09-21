@@ -13,7 +13,6 @@ class User(Base):
     phone_number = Column(String)
     verified = Column(Boolean)
 
-
     def __init__(self, name, surname, email, hashed_password, phone_number, verified):
         self.name = name
         self.surname = surname
@@ -23,14 +22,12 @@ class User(Base):
         self.verified = verified
 
 
-
 class LoginVerification(Base):
     __tablename__ = "login_verification"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, nullable=False)
     code = Column(Integer, nullable=False)
     expiry_timestamp = Column(TIMESTAMP)
-
 
     def __init__(self, email, code, expiry_timestamp):
         self.email = email
