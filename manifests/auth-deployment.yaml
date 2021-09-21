@@ -15,7 +15,7 @@ spec:
       hostNetwork: true
       containers:
         - name: auth-image
-          image: evgenija1/auth-image:v6
+          image: evgenija1/auth-image:v7
           imagePullPolicy: Always
           resources:
             requests:
