@@ -34,5 +34,6 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 
-class VerificationCode(BaseModel):
-    code : Optional[str] = None
+class VerificationObject(BaseModel):
+    email: str
+    code: str

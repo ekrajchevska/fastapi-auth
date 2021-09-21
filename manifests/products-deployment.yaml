@@ -15,7 +15,7 @@ spec:
       hostNetwork: true
       containers:
         - name: products-image
-          image: evgenija1/products-image:v4
+          image: evgenija1/products-image:v6
           imagePullPolicy: Always
           resources:
             requests:

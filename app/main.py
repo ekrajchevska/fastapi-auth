@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from app import models
 from app.database import engine
-from .routers import user
+from .routers import registration, authentication
 import logging
 
 
@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 #logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 models.Base.metadata.create_all(bind=engine)
-app.include_router(user.router)
+app.include_router(registration.router)
+app.include_router(authentication.router)
 
 @app.get("/")
 def read_root():
