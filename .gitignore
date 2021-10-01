@@ -1,7 +1,6 @@
 venv
 __pycache__
 auth_app.db
-app/auth/auth_env.py
-app/registration/reg_env.py
+.env
 db-vars.env
 .vscode

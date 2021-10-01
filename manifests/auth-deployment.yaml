@@ -15,8 +15,51 @@ spec:
       hostNetwork: true
       containers:
         - name: auth-image
-          image: evgenija1/auth-image:v7
+          image: evgenija1/auth-image:v14
           imagePullPolicy: Always
+          env:
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: twilio-secret
+                  key: TWILIO_ACCOUNT_SID
+
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: twilio-secret
+                  key: TWILIO_AUTH_TOKEN
+
+            - name: TWILIO_VERIFY_SERVICE
+              valueFrom:
+                secretKeyRef:
+                  name: twilio-secret
+                  key: TWILIO_VERIFY_SERVICE
+
+            - name: TWILIO_MESSAGING_LOGIN_SERVICE_SID
+              valueFrom:
+                secretKeyRef:
+                  name: twilio-secret
+                  key: TWILIO_MESSAGING_LOGIN_SERVICE_SID
+
+            - name: expire
+              valueFrom:
+                secretKeyRef:
+                  name: encoding-secret
+                  key: expire
+
+            - name: secret
+              valueFrom:
+                secretKeyRef:
+                  name: encoding-secret
+                  key: secret
+
+            - name: algorithm
+              valueFrom:
+                secretKeyRef:
+                  name: encoding-secret
+                  key: algorithm
+            
           resources:
             requests:
               memory: 100Mi
