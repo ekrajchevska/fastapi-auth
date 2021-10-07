@@ -15,7 +15,7 @@ spec:
       hostNetwork: true
       containers:
         - name: products-databases
-          image: evgenija1/products-databases:v9
+          image: evgenija1/products-databases:v10
           imagePullPolicy: Always
           env:
             - name: POSTGRES_USER
