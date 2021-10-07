@@ -4,10 +4,10 @@ from .twilio_func import client
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import Response
 from sqlalchemy.orm.session import Session
-from .. import schemas, database
+from app import schemas, database
 from datetime import timedelta
-from ..auth.token import create_access_token, validate_access_token
-from ..services.user_service import UserService
+from app.auth.token import create_access_token, validate_access_token
+from app.services.user_service import UserService
 import random
 import os
 

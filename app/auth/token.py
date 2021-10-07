@@ -3,11 +3,12 @@ from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 from typing import Optional
 import app.schemas as schemas
-
-# from dotenv import load_dotenv
+from .auth_env import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 import os
 
-# load_dotenv()
+# from dotenv import load_dotenv
+
+# load_dotenv() --> use when running locally without k8s-secrets
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -15,11 +16,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=os.getenv("expire"))
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, os.getenv("secret"), algorithm=os.getenv("algorithm")
-    )
+    encoded_jwt = jwt.encode(to_encode, os.getenv("secret"), algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -30,9 +29,7 @@ def validate_access_token(token: str):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(
-            token, os.getenv("secret"), algorithms=[os.getenv("algorithm")]
-        )
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("email")
         if email is None:
             raise credentials_exception
