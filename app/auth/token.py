@@ -3,8 +3,7 @@ from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 from typing import Optional
 import app.schemas as schemas
-from .auth_env import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-import os
+from app.read_env import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 # from dotenv import load_dotenv
 
@@ -18,7 +17,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, os.getenv("secret"), algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 

@@ -3,5 +3,4 @@ __pycache__
 auth_app.db
 .env
 db-vars.env
-auth_env.py
 .vscode
