@@ -2,12 +2,12 @@ from jose import jwt, JWTError
 from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 from typing import Optional
-from . import auth_env
 import app.schemas as schemas
+from app.read_env import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
-SECRET_KEY = auth_env.secret
-ALGORITHM = auth_env.algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = auth_env.expire
+# from dotenv import load_dotenv
+
+# load_dotenv() --> use when running locally without k8s-secrets
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):

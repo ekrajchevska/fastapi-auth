@@ -1,7 +1,7 @@
 from fastapi.openapi.models import Response
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm.session import Session
-from .. import schemas, database
+from app import schemas, database
 from passlib.context import CryptContext
 from . import twilio_func
 from app.services.user_service import UserService
