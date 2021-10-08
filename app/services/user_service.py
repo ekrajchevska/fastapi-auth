@@ -21,7 +21,7 @@ class UserService:
         db_user = db.query(models.User).filter(models.User.email == email).first()
         return db_user
 
-    def create_user(db: Session, user: schemas.UserCreate):
+    def create_user(self, db: Session, user: schemas.UserCreate):
         db_user = models.User(
             name=user.name,
             surname=user.surname,

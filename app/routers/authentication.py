@@ -1,18 +1,14 @@
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from app.read_env import ACCESS_TOKEN_EXPIRE_MINUTES, TWILIO_MESSAGING_LOGIN_SERVICE_SID
 from .registration import pwd_context
 from .twilio_func import client
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import Response
 from sqlalchemy.orm.session import Session
-from .. import schemas, database
-from app.registration import reg_env
+from app import schemas, database
 from datetime import timedelta
-from ..auth.token import (
-    create_access_token,
-    validate_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-)
-from ..services.user_service import UserService
+from app.auth.token import create_access_token, validate_access_token
+from app.services.user_service import UserService
 import random
 
 
@@ -52,7 +48,7 @@ def login(
     code = round(random.random() * 10000)
     user_service.create_login_verification_obj(db, user.email, code)
     client.messages.create(
-        messaging_service_sid=reg_env.TWILIO_MESSAGING_LOGIN_SERVICE_SID,
+        messaging_service_sid=TWILIO_MESSAGING_LOGIN_SERVICE_SID,
         body=f"Your login code is {code}",
         to=user.phone_number,
     )
