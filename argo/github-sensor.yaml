@@ -210,7 +210,7 @@ spec:
                     cd {{inputs.parameters.app_repo_name}}
                     
                     echo "Running lint check..."
-                #    python -m flake8 app.py
+                    python -m flake8 app.py
                   volumeMounts:
                   - name: github-access
                     mountPath: /.github/
@@ -233,7 +233,7 @@ spec:
                     cd {{inputs.parameters.app_repo_name}}
                     
                     echo "Running format check with black formatter..."
-                  #  python -m black --check app.py
+                    python -m black --check app.py
                   volumeMounts:
                   - name: github-access
                     mountPath: /.github/
