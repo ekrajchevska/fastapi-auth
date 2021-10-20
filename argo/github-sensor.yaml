@@ -1,0 +1,346 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  creationTimestamp: "2021-07-18T11:48:26Z"
+  finalizers:
+  - sensor-controller
+  generation: 1
+  labels:
+    example: "true"
+  name: auth-ms-workflow
+  namespace: argo-events
+  resourceVersion: "11068"
+  uid: a7032bf0-f29c-447c-b8d1-9e35a736433e
+spec:
+  dependencies:   # dependency za sensor-ot (sensorot slusa na vakvite eventi -> subscribe), tuka se def. event-sources, moze pojke
+  - name: github
+    eventSourceName: github-event-source
+    eventName: auth-webhook
+    filters:    # bez filter -> commit loop
+      data:   
+        - path: body.commits.0.message
+          type: string
+          comparator: "!="
+          value:
+            - "AutoUpgraded*"
+  triggers:
+  - template:
+      name: github-workflow-trigger
+      k8s:
+        group: argoproj.io
+        version: v1alpha1
+        operation: create
+        resource: workflows
+        source:
+          resource:
+            apiVersion: argoproj.io/v1alpha1
+            kind: Workflow
+            metadata:
+              generateName: argo-build-
+              labels:
+                workflows.argoproj.io/archive-strategy: "false"
+            spec:
+              entrypoint: build
+              volumes:
+              - name: kaniko-secret
+                secret:
+                  secretName: docker-registry-credentials
+                  items:
+                    - key: .dockerconfigjson
+                      path: config.json
+              - name: github-access
+                secret:
+                  secretName: github-access
+                  items:
+                    - key: token
+                      path: token
+                    - key: user
+                      path: user
+                    - key: email
+                      path: email
+
+              templates:
+              - name: build
+                dag:
+                  tasks:
+                  - name: install-dependencies
+                    template: install-dependencies
+                    arguments:
+                      parameters:
+                      - name: app_repo_clone_url
+                        value: ""
+                      - name: app_repo_name
+                        value: ""
+
+                  - name: run-unit-tests
+                    template: unit-tests
+                    arguments:
+                      parameters:
+                      - name: app_repo_clone_url
+                        value: ""
+                      - name: app_repo_name
+                        value: ""
+                      artifacts:
+                      - name: python-packages
+                        from: "{{tasks.install-dependencies.outputs.artifacts.python-packages}}"
+                    dependencies:
+                    - install-dependencies
+
+                  - name: run-lint-check
+                    template: lint-check
+                    arguments:
+                      parameters:
+                      - name: app_repo_clone_url
+                        value: ""
+                      - name: app_repo_name
+                        value: ""
+                      artifacts:
+                      - name: python-packages
+                        from: "{{tasks.install-dependencies.outputs.artifacts.python-packages}}"
+                    dependencies:
+                    - install-dependencies
+
+                  - name: run-format-check
+                    template: format-check
+                    arguments:
+                      parameters:
+                      - name: app_repo_clone_url
+                        value: ""
+                      - name: app_repo_name
+                        value: ""
+                      artifacts:
+                      - name: python-packages
+                        from: "{{tasks.install-dependencies.outputs.artifacts.python-packages}}"
+                    dependencies:
+                    - install-dependencies
+
+                  - name: build-container-image
+                    templateRef:
+                      name: container-image
+                      template: build-kaniko-git
+                    arguments:
+                      parameters:
+                      - name: app_repo
+                        value: ""
+                      - name: container_image
+                        value: evgenija1/auth-image:v15
+                      - name: container_tag
+                        value: ""
+                    dependencies:
+                    - run-unit-tests
+                    - run-lint-check
+                    - run-format-check
+
+                  - name: run-functional-tests
+                    template: functional-tests
+                    arguments:
+                      parameters:
+                      - name: app_repo_clone_url
+                        value: ""
+                      - name: app_repo_name
+                        value: ""
+                      artifacts:
+                      - name: python-packages
+                        from: "{{tasks.install-dependencies.outputs.artifacts.python-packages}}"
+                    dependencies:
+                    - build-container-image
+
+                  - name: promote-staging
+                    templateRef:
+                      name: promote
+                      template: promote
+                    arguments:
+                      parameters:
+                      - name: environment
+                        value: main
+                      - name: repo_owner
+                        value: ekrajchevska
+                      - name: repo_name
+                        value: ""
+                      - name: image_owner
+                        value: evgenija1
+                      - name: image_name
+                        value: "products-databases"
+                      - name: tag
+                        value: ""
+                    dependencies:
+                    - run-functional-tests
+
+              - name: install-dependencies
+                inputs:
+                  parameters:
+                  - name: app_repo_clone_url
+                  - name: app_repo_name
+                script:
+                  image: python:3.8
+                  command: [sh]
+                  source: |
+                    echo "Cloning repository..."
+
+                    git clone {{inputs.parameters.app_repo_clone_url}}
+                    cd {{inputs.parameters.app_repo_name}}
+
+                    echo "Installing requirements..."
+                    pip install -r requirements.txt
+                  volumeMounts:
+                  - name: github-access
+                    mountPath: /.github/
+                outputs:
+                  artifacts:
+                  - name: python-packages
+                    path: /usr/local/lib/python3.8/site-packages
+                    archive:
+                      none: {}
+
+              - name: lint-check
+                inputs:
+                  parameters:
+                  - name: app_repo_clone_url
+                  - name: app_repo_name
+                  artifacts:
+                  - name: python-packages
+                    path: /usr/local/lib/python3.8/site-packages
+                script:
+                  image: python:3.8
+                  command: [sh]
+                  source: |
+                    echo "Cloning repository..."
+
+                    git clone {{inputs.parameters.app_repo_clone_url}}
+                    cd {{inputs.parameters.app_repo_name}}
+                    
+                    echo "Running lint check..."
+                    python -m flake8 app.py
+                  volumeMounts:
+                  - name: github-access
+                    mountPath: /.github/
+
+              - name: format-check
+                inputs:
+                  parameters:
+                  - name: app_repo_clone_url
+                  - name: app_repo_name
+                  artifacts:
+                  - name: python-packages
+                    path: /usr/local/lib/python3.8/site-packages
+                script:
+                  image: python:3.8
+                  command: [sh]
+                  source: |
+                    echo "Cloning repository..."
+
+                    git clone {{inputs.parameters.app_repo_clone_url}}
+                    cd {{inputs.parameters.app_repo_name}}
+                    
+                    echo "Running format check with black formatter..."
+                    python -m black --check app.py
+                  volumeMounts:
+                  - name: github-access
+                    mountPath: /.github/
+
+              - name: unit-tests
+                inputs:
+                  parameters:
+                  - name: app_repo_clone_url
+                  - name: app_repo_name
+                  artifacts:
+                  - name: python-packages
+                    path: /usr/local/lib/python3.8/site-packages
+                script:
+                  image: python:3.8
+                  command: [sh]
+                  source: |
+                    echo "Cloning repository..."
+
+                    git clone {{inputs.parameters.app_repo_clone_url}}
+                    cd {{inputs.parameters.app_repo_name}}
+                    
+                    echo "Running unit tests..."
+                    python -m pytest
+                  volumeMounts:
+                  - name: github-access
+                    mountPath: /.github/
+
+              - name: functional-tests
+                inputs:
+                  parameters:
+                  - name: app_repo_clone_url
+                  - name: app_repo_name
+                  artifacts:
+                  - name: python-packages
+                    path: /usr/local/lib/python3.8/site-packages
+                script:
+                  image: python:3.8
+                  command: [sh]
+                  source: |
+                    echo "Cloning repository..."
+
+                    git clone {{inputs.parameters.app_repo_clone_url}}
+                    cd {{inputs.parameters.app_repo_name}}
+                    
+                    echo "Running functional tests..."
+                    python -m pytest
+                  volumeMounts:
+                  - name: github-access
+                    mountPath: /.github/
+        parameters:
+        - src:
+            dependencyName: github
+            dataKey: body.repository.clone_url
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.0.arguments.parameters.1.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.clone_url
+          dest: spec.templates.0.dag.tasks.1.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.1.arguments.parameters.1.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.clone_url
+          dest: spec.templates.0.dag.tasks.2.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.2.arguments.parameters.1.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.clone_url
+          dest: spec.templates.0.dag.tasks.3.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.3.arguments.parameters.1.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.git_url
+          dest: spec.templates.0.dag.tasks.4.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.commits.0.id
+          dest: spec.templates.0.dag.tasks.4.arguments.parameters.2.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.clone_url
+          dest: spec.templates.0.dag.tasks.5.arguments.parameters.0.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.5.arguments.parameters.1.value
+        - src:
+            dependencyName: github
+            dataKey: body.repository.name
+          dest: spec.templates.0.dag.tasks.6.arguments.parameters.2.value
+        - src:
+            dependencyName: github
+            dataKey: body.commits.0.id
+          dest: spec.templates.0.dag.tasks.6.arguments.parameters.5.value
+  - template:
+      log: {}
+      name: log-1
+  
