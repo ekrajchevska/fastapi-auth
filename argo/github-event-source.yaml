@@ -10,7 +10,7 @@ spec:
     - port: 12000
       targetPort: 12000
   github:
-    auth-webhook:      #imeto na github webhook (listenerot), eventName actually (custom, kako sakame)
+    auth-webhook:      # imeto na github webhook (listenerot), eventName actually (custom, kako sakame)
       owner: ekrajchevska
       repository: fastapi-auth
       webhook:
