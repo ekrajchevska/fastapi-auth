@@ -210,7 +210,7 @@ spec:
                     cd {{inputs.parameters.app_repo_name}}
                     
                     echo "Running lint check..."
-                    python -m flake8 app.py
+
                   volumeMounts:
                   - name: github-access
                     mountPath: /.github/
