@@ -1,6 +1,6 @@
 ---
 apiVersion: argoproj.io/v1alpha1
-kind: EventSource     # tuka definirame event source, vo slucajov github webhook (listener)
+kind: EventSource     #tuka definirame event source, vo slucajov github webhook (listener)
 metadata:
   name: github-event-source 
   namespace: argo-events
@@ -11,10 +11,10 @@ spec:
       targetPort: 12000
   github:
     auth-webhook:      # imeto na github webhook (listenerot), eventName actually (custom, kako sakame)
-      owner: stefankochev
-      repository: argo-test
+      owner: ekrajchevska
+      repository: fastapi-auth
       webhook:
-        endpoint: /argo-test
+        endpoint: /auth-ms
         port: "12000"
         method: POST
         url: http://localhost
