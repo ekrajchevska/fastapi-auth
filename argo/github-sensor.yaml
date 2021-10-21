@@ -123,7 +123,7 @@ spec:
                       - name: app_repo
                         value: ""
                       - name: container_image
-                        value: evgenija1/auth-image:v15
+                        value: evgenija1/auth-image
                       - name: container_tag
                         value: ""
                     dependencies:
