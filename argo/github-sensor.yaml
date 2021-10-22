@@ -16,7 +16,7 @@ spec:
   - name: github
     eventSourceName: github-event-source
     eventName: auth-webhook
-    filters:    # bez filter -> commit loop
+    filters:    # bez filter --> commit loop
       data:   
         - path: body.commits.0.message
           type: string
