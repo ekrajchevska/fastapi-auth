@@ -160,7 +160,7 @@ spec:
                       - name: image_owner
                         value: evgenija1
                       - name: image_name
-                        value: "products-databases"
+                        value: "auth-image"
                       - name: tag
                         value: ""
                     dependencies:
