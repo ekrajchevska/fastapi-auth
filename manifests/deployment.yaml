@@ -15,7 +15,7 @@ spec:
       hostNetwork: true
       containers:
         - name: auth-image
-          image: evgenija1/auth-image:f7b07a1c0a11418db0f690547c1e1ecab42d4b19
+          image: evgenija1/auth-image:a3c749771bdbc0a53f0b94de27e1d3ac8f207baf
           imagePullPolicy: Always
           env:
             - name: POSTGRES_USER
