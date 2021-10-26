@@ -14,7 +14,7 @@ metadata:
 spec:
   dependencies:   # dependency za sensor-ot (sensorot slusa na vakvite eventi -> subscribe), tuka se def. event-sources, moze pojke
   - name: github
-    eventSourceName: github-event-source
+    eventSourceName: fastapi-github-event-source
     eventName: auth-webhook
     filters:    # bez filter --> commit loop
       data:   
